@@ -35,14 +35,18 @@ def execute_sql_script(server, database, username, password, script_path, output
                 
                 # Execute the statement
                 cursor.execute(statement)
-                # print("statement ===", statement)
 
                 # Check if the statement is a SELECT query
                 if cursor.description is not None:
+                    # Fetch column names
+                    column_names = [column[0] for column in cursor.description]
+
+                    # Write column names to CSV
+                    csv_writer.writerow(column_names)
+
                     # Fetch all rows and write to CSV
                     rows = cursor.fetchall()
                     for row in rows:
-                        print(row)
                         csv_writer.writerow(row)
 
         print(f"SQL script executed successfully! Results written to {output_csv_path}")
