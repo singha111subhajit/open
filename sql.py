@@ -1,6 +1,7 @@
 import pyodbc
+import csv
 
-def execute_sql_script(server, database, username, password, script_path, output_file_path):
+def execute_sql_script(server, database, username, password, script_path, output_csv_path):
     conn = None
     try:
         # Connect to the SQL Server
@@ -11,6 +12,8 @@ def execute_sql_script(server, database, username, password, script_path, output
             f'UID={username};'
             f'PWD={password}'
         )
+
+        # Create a cursor
         cursor = conn.cursor()
 
         # Read the SQL script from the file
@@ -18,34 +21,42 @@ def execute_sql_script(server, database, username, password, script_path, output
             sql_script = script_file.read()
 
         # Split the script into individual statements
-        sql_statements = [statement.strip() for statement in sql_script.split(";")]
+        sql_statements = sql_script.split(';')
 
-        for statement in sql_statements:
-            if statement:
-                # Execute each statement
+        # Open a CSV file for writing
+        with open(output_csv_path, 'w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file)
+
+            # Execute each statement
+            for statement in sql_statements:
+                # Skip empty statements
+                if not statement.strip():
+                    continue
+                
+                # Execute the statement
                 cursor.execute(statement)
+                # print("statement ===", statement)
 
                 # Check if the statement is a SELECT query
                 if cursor.description is not None:
-                    # Fetch all rows and store the results in a list
+                    # Fetch all rows and write to CSV
                     rows = cursor.fetchall()
+                    for row in rows:
+                        print(row)
+                        csv_writer.writerow(row)
 
-                    # Write the results to a text file
-                    with open(output_file_path, 'a') as output_file:
-                        for row in rows:
-                            output_file.write(str(row) + '\n')
-
-        print(f"SQL script executed successfully! Results written to: {output_file_path}")
+        print(f"SQL script executed successfully! Results written to {output_csv_path}")
 
     except pyodbc.Error as e:
         print(f"Error executing SQL script: {e}")
+
+    except Exception as ex:
+        print(f"An unexpected error occurred: {ex}")
 
     finally:
         # Close the connection
         if conn:
             conn.close()
-
-
 
 # Example usage
 server = 'localhost,1433'
@@ -53,6 +64,6 @@ database = 'master'  # Replace with your actual database name
 username = 'sa'
 password = 'YourPassword123!'  # Replace with your actual password
 script_path = '/home/subhajit/Desktop/open/sql_1.sql'
-output_file_path = '/home/subhajit/Desktop/open/sql_script_results.txt'
+output_csv_path = '/home/subhajit/Desktop/open/sql_output.csv'
 
-execute_sql_script(server, database, username, password, script_path, output_file_path)
+execute_sql_script(server, database, username, password, script_path, output_csv_path)
