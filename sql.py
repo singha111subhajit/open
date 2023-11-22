@@ -1,5 +1,7 @@
 import pyodbc
 import csv
+import sqlparse
+import chardet
 
 def execute_sql_script(server, database, username, password, script_path, output_csv_path):
     conn = None
@@ -16,19 +18,24 @@ def execute_sql_script(server, database, username, password, script_path, output
         # Create a cursor
         cursor = conn.cursor()
 
-        # Read the SQL script from the file
-        with open(script_path, 'r') as script_file:
+        # Detect encoding of the SQL script
+        with open(script_path, 'rb') as script_file:
+            result = chardet.detect(script_file.read())
+            encoding = result['encoding']
+
+        # Read the SQL script from the file with detected encoding
+        with open(script_path, 'r', encoding=encoding) as script_file:
             sql_script = script_file.read()
 
-        # Split the script into individual statements
-        sql_statements = sql_script.split(';')
+        # Use sqlparse to split the script into individual statements
+        parsed_script = sqlparse.split(sql_script)
 
         # Open a CSV file for writing
         with open(output_csv_path, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
 
             # Execute each statement
-            for statement in sql_statements:
+            for statement in parsed_script:
                 # Skip empty statements
                 if not statement.strip():
                     continue
