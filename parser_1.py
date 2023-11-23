@@ -6,7 +6,7 @@ from datetime import datetime
 import zipfile
 import os
 
-def execute_sql_scripts_in_order(server, database, username, password, list_file_path, output_directory):
+def execute_sql_scripts_in_order(server, database, username, password, list_file_path, sql_dir, output_directory):
     conn = None
     try:
         # Connect to the SQL Server
@@ -31,13 +31,16 @@ def execute_sql_scripts_in_order(server, database, username, password, list_file
         time_string = current_datetime.strftime('%H%M%S')
 
         # Execute each script in the specified order
-        for script_path in sql_scripts:
+        for script_name in sql_scripts:
+            # Build the full path to the SQL script
+            script_path = os.path.join(sql_dir, script_name)
+
             # Get the base name of the SQL file without extension
-            sql_file_name = script_path.split('/')[-1].split('.')[0]
+            sql_file_name = os.path.splitext(script_name)[0]
 
             # Generate the CSV file name with the specified format
             csv_file_name = f'{sql_file_name}-{date_string}-{time_string}.csv'
-            csv_file_path = f'{output_directory}/{csv_file_name}'
+            csv_file_path = os.path.join(output_directory, csv_file_name)
 
             # Open a CSV file for writing
             with open(csv_file_path, 'w', newline='') as csv_file:
@@ -108,5 +111,6 @@ database = 'master'  # Replace with your actual database name
 username = 'sa'
 password = 'YourPassword123!'  # Replace with your actual password
 list_file_path = '/home/subhajit/Desktop/open/list_sql.txt'
-output_directory = '/home/subhajit/Desktop/open/test_path'
-execute_sql_scripts_in_order(server, database, username, password, list_file_path, output_directory)
+sql_dir = '/home/subhajit/Desktop/open/sql_files'
+output_directory = '/home/subhajit/Desktop/open/output'
+execute_sql_scripts_in_order(server, database, username, password, list_file_path, sql_dir, output_directory)
