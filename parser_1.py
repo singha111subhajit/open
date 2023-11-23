@@ -44,7 +44,7 @@ def execute_sql_scripts_in_order(server, database, username, password, list_file
 
             # Open a CSV file for writing
             with open(csv_file_path, 'w', newline='') as csv_file:
-                csv_writer = csv.writer(csv_file)
+                csv_writer = None
 
                 # Detect encoding of the SQL script
                 with open(script_path, 'rb') as script_file:
@@ -72,8 +72,9 @@ def execute_sql_scripts_in_order(server, database, username, password, list_file
                         # Fetch column names
                         column_names = [column[0] for column in cursor.description]
 
-                        # Write column names to CSV (only for the first script)
+                        # Open a CSV file for writing if not opened yet
                         if not csv_writer:
+                            csv_writer = csv.writer(csv_file)
                             csv_writer.writerow(column_names)
 
                         # Fetch all rows and write to CSV
@@ -104,6 +105,8 @@ def execute_sql_scripts_in_order(server, database, username, password, list_file
         # Close the connection
         if conn:
             conn.close()
+
+
 
 # Example usage
 server = 'localhost,1433'
