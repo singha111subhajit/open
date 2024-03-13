@@ -2,27 +2,28 @@ from cryptography.fernet import Fernet
 from dotenv import set_key, dotenv_values
 import os
 
-def encrypt_pass(ORIGINAL_PASSWORD:None):
+def encrypt_pass(ORIGINAL_PASSWORD:None, env:None):
     try:
-        env_vars = dotenv_values('.env')
+        env_vars = dotenv_values(env)
         if 'ENCRYPTION_KEY' in env_vars:
             print("ENCRYPTION_KEY already exists in .env file.")
             key = env_vars['ENCRYPTION_KEY'].encode()
         else:
             key = Fernet.generate_key()
-            set_key('.env', 'ENCRYPTION_KEY', key.decode())
+            set_key(env, 'ENCRYPTION_KEY', key.decode())
 
         cipher_suite = Fernet(key)
         original_password = env_vars[ORIGINAL_PASSWORD]
         encrypted_password = cipher_suite.encrypt(original_password.encode())
-        set_key('.env', 'ENCRYPTED_PASSWORD', encrypted_password.decode())
+        set_key(env, 'ENCRYPTED_PASSWORD', encrypted_password.decode())
 
     except Exception as e:
         print(f"Error during encryption: {e}")
 
-def get_password(ENCRYPTED_PASSWORD:None):
+def get_password(ENCRYPTED_PASSWORD:None, env:None,ORIGINAL_PASSWORD:None):
     try:
-        env_vars = dotenv_values('.env')
+        encrypt_pass(ORIGINAL_PASSWORD, env)
+        env_vars = dotenv_values(env)
         encryption_key = env_vars['ENCRYPTION_KEY']
         encrypted_password = env_vars[ENCRYPTED_PASSWORD]
 
@@ -38,7 +39,6 @@ def get_password(ENCRYPTED_PASSWORD:None):
         print(f"Error during decryption: {e}")
 
 
-encrypt_pass('ORIGINAL_PASSWORD')
-pass_wd = get_password(ENCRYPTED_PASSWORD = 'ENCRYPTED_PASSWORD')
+pass_wd = get_password(ENCRYPTED_PASSWORD = 'ENCRYPTED_PASSWORD',ORIGINAL_PASSWORD='ORIGINAL_PASSWORD', env='.env')
 print(f"decrypted password:{pass_wd}")
 
